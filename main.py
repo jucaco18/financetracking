@@ -1,0 +1,239 @@
+from fastapi import FastAPI, Depends, HTTPException, Security
+from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.orm import Session
+from database import engine, SessionLocal, User, Transaction, HistoricalCategorization, BudgetType, SyncLog, init_db
+import schemas
+from passlib.context import CryptContext
+from datetime import datetime, timedelta
+import jwt
+import os
+from services.categorization import categorize_transaction
+from routers import gocardless, transactions
+
+# Initialize FastAPI app
+app = FastAPI()
+
+# Event to initialize the database on startup
+@app.on_event("startup")
+def startup_event():
+    init_db()
+
+# Include API Routers
+app.include_router(transactions.router, prefix="/transactions", tags=["Transactions"])
+app.include_router(gocardless.router, prefix="/gocardless", tags=["GoCardless"])
+
+# Password hashing configuration
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# JWT Configuration
+SECRET_KEY = "mysecretkey"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_HOURS = 1
+
+def get_db():
+    """Dependency to get the database session."""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+def hash_password(password: str):
+    """Hashes a password securely."""
+    return pwd_context.hash(password)
+
+def verify_password(plain_password, hashed_password):
+    """Verifies a hashed password."""
+    return pwd_context.verify(plain_password, hashed_password)
+
+def create_access_token(data: dict, expires_delta: timedelta = timedelta(hours=ACCESS_TOKEN_EXPIRE_HOURS)):
+    """Generates a JWT access token."""
+    to_encode = data.copy()
+    expire = datetime.utcnow() + expires_delta
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+
+def get_current_user(token: str = Security(oauth2_scheme), db: Session = Depends(get_db)):
+    """Extracts the current user from the JWT token."""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("sub")
+        if not email:
+            raise HTTPException(status_code=401, detail="Invalid authentication")
+
+        user = db.query(User).filter(User.email == email).first()
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        return user
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+# User Registration Endpoint
+@app.post("/register/", response_model=schemas.UserResponse)
+def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    """Registers a new user."""
+    existing_user = db.query(User).filter(User.email == user.email).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    hashed_password = hash_password(user.password)
+    new_user = User(name=user.name, email=user.email, password_hash=hashed_password)
+
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
+# User Login Endpoint
+from fastapi.security import OAuth2PasswordRequestForm
+
+@app.post("/login/")
+def login_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.email == form_data.username).first()
+    if not db_user or not verify_password(form_data.password, db_user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    token = create_access_token({"sub": db_user.email})
+    return {"access_token": token, "token_type": "bearer"}
+
+
+# Create Transaction Endpoint with Categorization
+@app.post("/transactions/", response_model=schemas.TransactionResponse)
+def create_transaction(
+    transaction: schemas.TransactionCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Creates a new transaction with automatic categorization."""
+    category, budget_type = categorize_transaction(
+        db,
+        transaction.description,
+        transaction.description,
+        transaction.description,
+        transaction.description,
+        transaction.description
+    )
+
+    new_transaction = Transaction(
+        date=transaction.date,
+        amount=transaction.amount,
+        description=transaction.description,
+        category=category
+    )
+
+    db.add(new_transaction)
+    db.commit()
+    db.refresh(new_transaction)
+    return new_transaction
+
+# Retrieve All Transactions Endpoint
+@app.get("/transactions/", response_model=list[schemas.TransactionResponse])
+def get_transactions(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Retrieves all transactions for the authenticated user."""
+    return db.query(Transaction).all()
+
+@app.put("/transactions/{transaction_id}/categorize/")
+def manually_categorize_transaction(
+    transaction_id: int,
+    new_category: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Allows users to manually update a transaction's category."""
+    transaction = db.query(Transaction).filter(Transaction.id == transaction_id).first()
+
+    if not transaction:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+
+    transaction.category = new_category
+    transaction.manually_reviewed = True  # Mark as manually categorized
+    db.commit()
+
+    return {"message": "Transaction updated successfully", "transaction_id": transaction.id, "new_category": new_category}
+
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+GOCARDLESS_ACCESS_TOKEN = os.getenv("GOCARDLESS_ACCESS_TOKEN")
+GOCARDLESS_REFRESH_TOKEN = os.getenv("GOCARDLESS_REFRESH_TOKEN")
+GOCARDLESS_CLIENT_ID = os.getenv("GOCARDLESS_CLIENT_ID")
+GOCARDLESS_SECRET_ID = os.getenv("GOCARDLESS_SECRET_ID")
+
+KRAKEN_API_KEY = os.getenv("KRAKEN_API_KEY")
+KRAKEN_SECRET = os.getenv("KRAKEN_SECRET")
+
+POLYGONSCAN_API_KEY = os.getenv("POLYGONSCAN_API_KEY")
+WALLET_ADDRESS = os.getenv("WALLET_ADDRESS")
+
+#GoCardless API
+import requests
+
+GOCARDLESS_API_BASE_URL = "https://bankaccountdata.gocardless.com/api/v2"
+
+@app.get("/gocardless/transactions/")
+def fetch_gocardless_transactions(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Fetch transactions from GoCardless API"""
+    url = f"{GOCARDLESS_API_BASE_URL}/accounts/{WALLET_ADDRESS}/transactions"
+    headers = {"Authorization": f"Bearer {GOCARDLESS_ACCESS_TOKEN}"}
+
+    response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        raise HTTPException(status_code=400, detail=f"GoCardless Error: {response.text}")
+
+    return response.json()
+
+GOCARDLESS_TOKEN_REFRESH_URL = "https://bankaccountdata.gocardless.com/api/v2/token/refresh/"
+
+def refresh_gocardless_access_token():
+    """Refresh GoCardless Access Token"""
+    headers = {"Authorization": f"Basic {GOCARDLESS_CLIENT_ID}:{GOCARDLESS_SECRET_ID}"}
+    payload = {"refresh": GOCARDLESS_REFRESH_TOKEN}
+
+    response = requests.post(GOCARDLESS_TOKEN_REFRESH_URL, headers=headers, data=payload)
+    if response.status_code == 200:
+        new_access_token = response.json().get("access")
+        os.environ["GOCARDLESS_ACCESS_TOKEN"] = new_access_token  # Update token in memory
+        return new_access_token
+    else:
+        raise Exception(f"Failed to refresh token: {response.text}")
+
+#Crypto Balance Fetching
+
+def fetch_kraken_balances():
+    """Fetch crypto balances from Kraken API"""
+    url = "https://api.kraken.com/0/private/Balance"
+    headers = {"API-Key": KRAKEN_API_KEY}
+
+    response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        raise Exception(f"Kraken Error: {response.text}")
+
+    return response.json()
+
+@app.get("/crypto/kraken/")
+def get_kraken_balances():
+    """Retrieve Kraken balances"""
+    return fetch_kraken_balances()
+
+def fetch_trust_wallet_balances():
+    """Fetch balances from Trust Wallet using Polygonscan API"""
+    url = f"https://api.polygonscan.com/api?module=account&action=balance&address={WALLET_ADDRESS}&apikey={POLYGONSCAN_API_KEY}"
+    response = requests.get(url)
+    if response.status_code != 200:
+        raise Exception(f"Polygonscan Error: {response.text}")
+
+    return response.json()
+
+@app.get("/crypto/trustwallet/")
+def get_trust_wallet_balances():
+    """Retrieve Trust Wallet balances"""
+    return fetch_trust_wallet_balances()
