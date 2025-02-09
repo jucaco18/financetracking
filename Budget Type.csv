@@ -1,0 +1,50 @@
+﻿Category,Type,Budget Type,Shared expense,Ambiguous Category
+Salary,Income,Income,No,No
+Barre classes,Income,Income,No,No
+Notion,Income,Income,No,No
+Rent Pagola,Income,Income,Yes,No
+Other Income,Income,Income,Yes,No
+Interest Income Bunq,Income,Income,No,No
+Rent,Expense,Needs,Yes,No
+Water,Expense,Needs,Yes,No
+Electricity & heating,Expense,Needs,Yes,No
+Waste,Expense,Needs,Yes,No
+Internet,Expense,Needs,Yes,No
+Phone,Expense,Needs,No,No
+Groceries,Expense,Needs,Yes,No
+Health,Expense,Needs,No,No
+Pisco,Expense,Needs,Yes,No
+Transportation,Expense,Needs,No,No
+Apps & Bank fees,Expense,Needs,No,No
+Business Travel JK,Expense,Needs,No,No
+Business Expenses MB,Expense,Needs,No,No
+Eating out & fun,Expense,Wants,No,Yes
+Home shopping,Expense,Wants,Yes,No
+Clothes,Expense,Wants,No,Yes
+Other Shopping,Expense,Wants,No,Yes
+Appointments,Expense,Wants,No,No
+Gifts,Expense,Wants,No,No
+Flights,Expense,Wants,No,Yes
+Accomodations,Expense,Wants,Yes,Yes
+Travel Meals,Expense,Wants,Yes,Yes
+Travel Others,Expense,Wants,Yes,Yes
+Netflix & Spotify,Expense,Wants,Yes,No
+Classpass,Expense,Wants,No,No
+Cleaning guy,Expense,Wants,Yes,No
+Wedding & Honeymoon,Expense,Wants,Yes,No
+Others,Expense,Wants,Yes,Yes
+Emergency Fund,Savings,Savings,No,No
+Investing Savings,Savings,Savings,No,No
+Eggs Freezing Savings,Savings,Savings,Yes,No
+Travel Savings,Savings,Savings,No,No
+Taxes Savings,Savings,Savings,No,No
+Wedding Savings,Savings,Savings,No,No
+Stock Market,Investments,Investments,No,No
+Crypto,Investments,Investments,No,No
+Mortgage Pagola,Debt,Debt,Yes,No
+Pagola Others,Debt,Debt,Yes,No
+JC's Dad Debt,Debt,Debt,Yes,No
+Taxes,Debt,Debt,No,No
+Uncategorized,Uncategorized,Uncategorized,n/a,Yes
+Transfer In,Internal Transfer,Internal Transfer,n/a,No
+Transfer Out,Internal Transfer,Internal Transfer,n/a,No

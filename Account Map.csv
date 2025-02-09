@@ -1,0 +1,30 @@
+﻿Account Name,IBAN,Owner,Account Type,Account ID
+Shared,NL09BUNQ2032049023,Shared,Checking,01c55e60-de01-44be-bebf-5cdd12c1de4f
+Savings JC,NL65BUNQ2092342924,Juancar,Savings,02a0747b-23f7-46d4-b759-69cc3521ca6a
+Pisco,NL07BUNQ2046454820,Shared,Checking,d55c7e37-416a-43d8-8c19-5dc7c9355781
+Main JC,NL35BUNQ2032022656,Juancar,Checking,d9613855-7273-42d5-bcf1-7c98a655bf7e
+Rent & Utilities,NL54BUNQ2032045303,Shared,Checking,ebc3a534-76b9-40e8-aec3-0094a05ffb5d
+Laboral Kutxa,ES5630350050710500091676,Shared,Checking,7d7f6500-8c13-4996-8216-e9856defb873
+Main MB,NL96BUNQ2032020491,Marina,Checking,eb6ef00a-99d6-4205-ac13-b80fc6227bea
+Leisure MB,NL37BUNQ2032023202,Marina,Checking,e45bebe3-dbb9-457b-a007-f49f86e8403c
+Shopping & Personal Care MB,NL87BUNQ2032049074,Marina,Checking,644dc586-faf8-41ca-95c5-95c52a8c08c7
+Subscriptions MB,NL64BUNQ2032047160,Marina,Checking,c1118754-dd27-4c08-85d4-20dbe1218772
+Insurances & Health MB,NL74BUNQ2032047756,Marina,Checking,2548af56-fd5e-41c6-86d6-b93577831843
+Emergency Fund MB,NL86BUNQ2110462728,Marina,Savings,03a097d7-3441-4c49-904e-61d60a73d481
+Travel Savings MB,NL29BUNQ2036464394,Marina,Savings,cc791a74-23e0-4966-aa83-ed1efec81ec6
+Pay Credit MB,NL94BUNQ2111085421,Marina,Checking,af42d852-29e5-4beb-8935-639c1055bbaf
+Taxes Savings MB,NL36BUNQ2092737848,Marina,Savings,cf7c7dd1-874e-4221-b715-f8ffa93ff01b
+Eggs Freezing,NL80BUNQ2110548681,Shared,Savings,5e283d74-8daa-4097-9dd6-318af52ee9ec
+Investing Savings MB,NL27BUNQ2115664639,Marina,Savings,f5c799cd-fd44-4e69-92fc-0dbf3954a249
+Barre,NL77BUNQ2145186174,Marina,Checking,b64dc0df-8482-47f2-b8bc-e92398e8cfa7
+Notion,NL49BUNQ2144964645,Marina,Checking,8fc7783e-c5cf-4181-b347-071e187b8c1e
+Bridge Savings,NL38BUNQ2145170677,Marina,Checking,32c32ea6-f5d0-4e78-a520-1a09889b4988
+Barre OLD,NL82BUNQ2084460980,Marina,Checking,
+Savings OLD,NL45BUNQ2065186097,Marina,Savings,
+Emergency OLD,NL29BUNQ2032226367,Marina,Savings,
+Wedding Costs,NL43BUNQ2092345648,Shared,Checking,
+Wedding Savings,NL57BUNQ2110897228,Shared,Savings,
+American Express,NL63DEUT0265188040,Shared,Checking,
+American Express,-32002,Juancar,Checking,
+American Express,-33018,Marina,Checking,
+Cash,Cash,Shared,Checking,

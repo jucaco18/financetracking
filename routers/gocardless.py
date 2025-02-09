@@ -8,7 +8,7 @@ router = APIRouter()
 
 @router.get("/transactions/")
 def get_gocardless_transactions(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
-    """Fetch transactions from GoCardless API using the linked account ID."""
+    """Fetch transactions from GoCardless API and store them in the correct format."""
     try:
         return fetch_gocardless_transactions(db)
     except Exception as e:
