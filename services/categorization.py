@@ -4,11 +4,11 @@ from models import Transaction, HistoricalCategorization
 
 # Load Budget Type mapping
 budget_df = pd.read_csv("Budget Type.csv")
-budget_map = {row["category"]: row["budget_type"] for _, row in budget_df.iterrows()}  # { Category: Budget Type }
+budget_map = {row["Category"]: row["Budget Type"] for _, row in budget_df.iterrows()}  # { Category: Budget Type }
 
 # Load Account Ownership mapping
 account_df = pd.read_csv("Account Map.csv")
-account_map = {row["iban"]: row["name"] for _, row in account_df.iterrows()}  # { IBAN: Account Name }
+account_map = {row["IBAN"]: row["Account Name"] for _, row in account_df.iterrows()}  # { IBAN: Account Name }
 
 def categorize_transactions(db: Session):
     """Applies categorization logic based on historical data and predefined budget mappings."""

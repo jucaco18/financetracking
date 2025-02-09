@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models import Transaction
 import schemas
-from services.categorization import categorize_transaction
+from services.categorization import categorize_transactions
 from utils.security import get_current_user
 
 router = APIRouter()
@@ -33,3 +33,14 @@ def create_transaction(
 def get_transactions(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     """Retrieves all transactions for the authenticated user."""
     return db.query(Transaction).all()
+
+@router.delete("/transactions/")
+def delete_all_transactions(db: Session = Depends(get_db)):
+    """Delete all transactions from the database."""
+    try:
+        db.query(Transaction).delete()
+        db.commit()
+        return {"message": "All transactions deleted successfully"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))

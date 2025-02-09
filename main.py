@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 import jwt
 from dotenv import load_dotenv
 import os
-from services.categorization import categorize_transaction
+from services.categorization import categorize_transactions
 from routers import transactions, gocardless, authentication, crypto, accounts
 
 # Load .env file

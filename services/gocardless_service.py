@@ -11,7 +11,7 @@ GOCARDLESS_ACCOUNT_ID = os.getenv("GOCARDLESS_ACCOUNT_ID")
 
 # Load account mapping
 account_map_df = pd.read_csv("Account Map.csv")
-account_map = {row["iban"]: row["name"] for _, row in account_map_df.iterrows()}  # { IBAN: Account Name }
+account_map = {row["IBAN"]: row["Account Name"] for _, row in account_map_df.iterrows()}  # { IBAN: Account Name }
 
 def fetch_gocardless_transactions(db: Session):
     """Fetch transactions from GoCardless API and store them in standardized format."""
