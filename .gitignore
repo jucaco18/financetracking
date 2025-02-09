@@ -1,1 +1,14 @@
+# Ignore environment variables
 .env
+*.env
+
+# Ignore config and secrets
+config.json
+secrets.py
+database.ini
+private_key.pem
+
+# Ignore unnecessary system files
+__pycache__/
+.vscode/
+.DS_Store
