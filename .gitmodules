@@ -1,0 +1,3 @@
+[submodule "nordigen-python"]
+	path = nordigen-python
+	url = https://github.com/nordigen/nordigen-python.git
