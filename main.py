@@ -12,6 +12,9 @@ import os
 from services.categorization import categorize_transaction
 from routers import transactions, gocardless, authentication, crypto, accounts
 
+# Load .env file
+load_dotenv()
+
 app = FastAPI()
 
 @app.on_event("startup")
@@ -23,6 +26,7 @@ app.include_router(gocardless.router, prefix="/gocardless", tags=["GoCardless"])
 app.include_router(authentication.router, prefix="/auth", tags=["Authentication"])
 app.include_router(crypto.router, prefix="/crypto", tags=["Crypto"])
 app.include_router(accounts.router, prefix="/accounts", tags=["Accounts"])
+
 
 # Password hashing configuration
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

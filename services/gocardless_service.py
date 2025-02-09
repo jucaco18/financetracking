@@ -14,8 +14,6 @@ GOCARDLESS_CLIENT_ID = os.getenv("GOCARDLESS_CLIENT_ID")
 GOCARDLESS_SECRET_ID = os.getenv("GOCARDLESS_SECRET_ID")
 GOCARDLESS_ACCOUNT_ID = os.getenv("GOCARDLESS_ACCOUNT_ID")
 
-# Debugging step
-print("DEBUG: GOCARDLESS_ACCOUNT_ID =", os.getenv("GOCARDLESS_ACCOUNT_ID"))
 
 #Fetch transactions from GoCardless API
 
