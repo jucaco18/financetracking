@@ -13,6 +13,7 @@ account_map = {row["IBAN"]: row["Account Name"] for _, row in account_df.iterrow
 # Load Shared Expense mapping
 shared_expense_map = {row["Category"]: row["Shared expense"] for _, row in budget_df.iterrows()}  # { Category: Shared Expense }
 
+
 def categorize_transactions(
     db: Session,
     account_name: str,
@@ -21,7 +22,7 @@ def categorize_transactions(
     creditor_iban: str,
     debtor_iban: str,
     additional_information: str,
-    amount: float  # Needed to determine Transfer In/Out
+    amount: float  # Added amount to determine Transfer In/Out
 ) -> (str, str, str):
     """Categorizes a transaction and returns (category, budget_type, author)."""
 
@@ -29,67 +30,60 @@ def categorize_transactions(
     budget_type = "Uncategorized"
     author = "Unknown"
 
-    print(f"🔍 Processing Transaction:")
-    print(f"  - Account Name: {account_name}")
-    print(f"  - Creditor Name: {creditor_name}")
-    print(f"  - Creditor IBAN: {creditor_iban}")
-    print(f"  - Debtor IBAN: {debtor_iban}")
-    print(f"  - Additional Info: {additional_information}")
-    print(f"  - Amount: {amount}")
-
     # ✅ **Special Case: American Express - Transfer In**
     if account_name == "American Express" and creditor_name == "HARTELIJK BEDANKT VOOR UW BETALING":
         category = "Transfer In"
         budget_type = "Internal Transfer"
-        print("✅ Categorized as Special Case: American Express Transfer In")
-    
+
     # ✅ **Special Case: Internal Transfer (Both IBANs belong to user)**
     elif creditor_iban in account_map and debtor_iban in account_map:
         category = "Transfer In" if amount > 0 else "Transfer Out"
         budget_type = "Internal Transfer"
-        print("✅ Categorized as Internal Transfer")
 
     else:
-        # 1️⃣ **Match by Creditor Name / Debtor Name**
+        # ✅ **Check against historical categorization**
         historical_match = db.query(HistoricalCategorization).filter(
             (HistoricalCategorization.creditor_name == creditor_name) |
-            (HistoricalCategorization.debtor_name == creditor_name)  # Match debtor for income
+            (HistoricalCategorization.creditor_iban == creditor_iban) |
+            (HistoricalCategorization.debtor_iban == debtor_iban) |
+            (HistoricalCategorization.additional_info.like(f"%{additional_information}%"))  # Allow partial match
         ).first()
 
         if historical_match:
             category = historical_match.category
             budget_type = historical_match.budget_type
-            print(f"✅ Matched by Creditor/Debtor Name: {category}, {budget_type}")
-
         else:
-            # 2️⃣ **Match by Additional Information**
-            historical_match = db.query(HistoricalCategorization).filter(
-                HistoricalCategorization.additional_info.like(f"%{additional_information}%")  # Partial match
-            ).first()
+            # ✅ **Match by Creditor Name / Debtor Name**
+            for keyword, mapped_budget_type in budget_map.items():
+                if creditor_name and keyword.lower() in creditor_name.lower():
+                    category = keyword
+                    budget_type = mapped_budget_type
+                    break
 
-            if historical_match:
-                category = historical_match.category
-                budget_type = historical_match.budget_type
-                print(f"✅ Matched by Additional Information: {category}, {budget_type}")
+            # ✅ **Match by Additional Information (If not matched already)**
+            if category == "Uncategorized":
+                for keyword, mapped_budget_type in budget_map.items():
+                    if additional_information and keyword.lower() in additional_information.lower():
+                        category = keyword
+                        budget_type = mapped_budget_type
+                        break
 
-            else:
-                # 3️⃣ **Match by Creditor IBAN / Debtor IBAN**
-                historical_match = db.query(HistoricalCategorization).filter(
-                    (HistoricalCategorization.creditor_iban == creditor_iban) |
-                    (HistoricalCategorization.debtor_iban == debtor_iban)
-                ).first()
-
-                if historical_match:
-                    category = historical_match.category
-                    budget_type = historical_match.budget_type
-                    print(f"✅ Matched by Creditor/Debtor IBAN: {category}, {budget_type}")
+            # ✅ **Match by Creditor IBAN / Debtor IBAN (If still not matched)**
+            if category == "Uncategorized":
+                for keyword, mapped_budget_type in budget_map.items():
+                    if creditor_iban and keyword.lower() in creditor_iban.lower():
+                        category = keyword
+                        budget_type = mapped_budget_type
+                        break
+                    if debtor_iban and keyword.lower() in debtor_iban.lower():
+                        category = keyword
+                        budget_type = mapped_budget_type
+                        break
 
     # ✅ **Determine `author` (Based on Shared Expense or Account Ownership)**
     if shared_expense_map.get(category) == "Yes":
         author = "Shared"
     else:
         author = account_map.get(account_iban, "Unknown")
-
-    print(f"🔹 Final Categorization → Category: {category}, Budget Type: {budget_type}, Author: {author}")
 
     return category, budget_type, author

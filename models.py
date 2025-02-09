@@ -12,19 +12,17 @@ class Transaction(Base):
     __tablename__ = "transactions"
 
     id = Column(Integer, primary_key=True, index=True)
+    account_name = Column(String)  # NEW: Derived from Account Map
+    account_iban = Column(String)  # NEW: Derived from Account Map
     transaction_id = Column(String, unique=True, index=True)
     date = Column(Date)
     amount = Column(Float)
     currency = Column(String, default="EUR")
-    account_name = Column(String)  # NEW: Derived from Account Map
-    account_iban = Column(String)  # NEW: Derived from Account Map
     creditor_name = Column(String, nullable=True)
     creditor_iban = Column(String, nullable=True)
     debtor_name = Column(String, nullable=True)
     debtor_iban = Column(String, nullable=True)
-    remittance_info = Column(String, nullable=True)
     additional_information = Column(String, nullable=True)  # NEW: Matches 'remittanceInformationUnstructured'
-    bank_transaction_code = Column(String, nullable=True)
     category = Column(String, nullable=True)  # NEW: Categorized field
     budget_type = Column(String, nullable=True)  # NEW: Categorization linked field
     categorized = Column(Boolean, default=False)  # NEW: Boolean to track if categorized
