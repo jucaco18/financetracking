@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from database import get_db, Transaction
+from database import get_db  # ✅ Correct: Import from database.py
+from models import Transaction  # ✅ Import models from models.py
 import schemas
-from ..services.categorization import categorize_transaction
+from services.categorization import categorize_transaction
 from utils.security import get_current_user
 
 router = APIRouter()

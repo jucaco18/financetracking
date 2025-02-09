@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
-from database import HistoricalCategorization
+from models import HistoricalCategorization 
+
 
 def categorize_transaction(db: Session, creditor_name: str, creditor_iban: str, debtor_name: str, debtor_iban: str, additional_info: str) -> tuple:
     # Convert inputs to lowercase

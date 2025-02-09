@@ -1,26 +1,27 @@
 from fastapi import FastAPI, Depends, HTTPException, Security
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
-from database import engine, SessionLocal, User, Transaction, HistoricalCategorization, BudgetType, SyncLog, init_db
+from database import engine, SessionLocal, init_db
+from models import User, Transaction, HistoricalCategorization, BudgetType, SyncLog
 import schemas
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 import jwt
 import os
 from services.categorization import categorize_transaction
-from routers import gocardless, transactions
+from routers import transactions, gocardless, authentication, crypto, accounts
 
-# Initialize FastAPI app
 app = FastAPI()
 
-# Event to initialize the database on startup
 @app.on_event("startup")
 def startup_event():
     init_db()
 
-# Include API Routers
 app.include_router(transactions.router, prefix="/transactions", tags=["Transactions"])
 app.include_router(gocardless.router, prefix="/gocardless", tags=["GoCardless"])
+app.include_router(authentication.router, prefix="/auth", tags=["Authentication"])
+app.include_router(crypto.router, prefix="/crypto", tags=["Crypto"])
+app.include_router(accounts.router, prefix="/accounts", tags=["Accounts"])
 
 # Password hashing configuration
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

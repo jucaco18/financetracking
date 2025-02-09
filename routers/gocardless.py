@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from services.nordigen_service import get_bank_transactions
 
+
 router = APIRouter()
 
 @router.get("/gocardless/transactions/{account_id}")
