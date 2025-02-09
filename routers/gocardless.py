@@ -1,13 +1,15 @@
-from fastapi import APIRouter, Depends
-from services.nordigen_service import get_bank_transactions
-
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from services.gocardless_service import fetch_gocardless_transactions
+from utils.security import get_current_user
+from database import get_db
 
 router = APIRouter()
 
-@router.get("/gocardless/transactions/{account_id}")
-def fetch_transactions(account_id: str):
-    """
-    Fetch bank transactions from GoCardless.
-    """
-    transactions = get_bank_transactions(account_id)
-    return transactions if transactions else {"error": "Failed to fetch transactions"}
+@router.get("/transactions/")
+def get_gocardless_transactions(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    """Fetch transactions from GoCardless API using the linked account ID."""
+    try:
+        return fetch_gocardless_transactions(db)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))

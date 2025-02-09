@@ -7,6 +7,7 @@ import schemas
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
 import jwt
+from dotenv import load_dotenv
 import os
 from services.categorization import categorize_transaction
 from routers import transactions, gocardless, authentication, crypto, accounts
@@ -158,83 +159,3 @@ def manually_categorize_transaction(
     db.commit()
 
     return {"message": "Transaction updated successfully", "transaction_id": transaction.id, "new_category": new_category}
-
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
-
-GOCARDLESS_ACCESS_TOKEN = os.getenv("GOCARDLESS_ACCESS_TOKEN")
-GOCARDLESS_REFRESH_TOKEN = os.getenv("GOCARDLESS_REFRESH_TOKEN")
-GOCARDLESS_CLIENT_ID = os.getenv("GOCARDLESS_CLIENT_ID")
-GOCARDLESS_SECRET_ID = os.getenv("GOCARDLESS_SECRET_ID")
-
-KRAKEN_API_KEY = os.getenv("KRAKEN_API_KEY")
-KRAKEN_SECRET = os.getenv("KRAKEN_SECRET")
-
-POLYGONSCAN_API_KEY = os.getenv("POLYGONSCAN_API_KEY")
-WALLET_ADDRESS = os.getenv("WALLET_ADDRESS")
-
-#GoCardless API
-import requests
-
-GOCARDLESS_API_BASE_URL = "https://bankaccountdata.gocardless.com/api/v2"
-
-@app.get("/gocardless/transactions/")
-def fetch_gocardless_transactions(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    """Fetch transactions from GoCardless API"""
-    url = f"{GOCARDLESS_API_BASE_URL}/accounts/{WALLET_ADDRESS}/transactions"
-    headers = {"Authorization": f"Bearer {GOCARDLESS_ACCESS_TOKEN}"}
-
-    response = requests.get(url, headers=headers)
-    if response.status_code != 200:
-        raise HTTPException(status_code=400, detail=f"GoCardless Error: {response.text}")
-
-    return response.json()
-
-GOCARDLESS_TOKEN_REFRESH_URL = "https://bankaccountdata.gocardless.com/api/v2/token/refresh/"
-
-def refresh_gocardless_access_token():
-    """Refresh GoCardless Access Token"""
-    headers = {"Authorization": f"Basic {GOCARDLESS_CLIENT_ID}:{GOCARDLESS_SECRET_ID}"}
-    payload = {"refresh": GOCARDLESS_REFRESH_TOKEN}
-
-    response = requests.post(GOCARDLESS_TOKEN_REFRESH_URL, headers=headers, data=payload)
-    if response.status_code == 200:
-        new_access_token = response.json().get("access")
-        os.environ["GOCARDLESS_ACCESS_TOKEN"] = new_access_token  # Update token in memory
-        return new_access_token
-    else:
-        raise Exception(f"Failed to refresh token: {response.text}")
-
-#Crypto Balance Fetching
-
-def fetch_kraken_balances():
-    """Fetch crypto balances from Kraken API"""
-    url = "https://api.kraken.com/0/private/Balance"
-    headers = {"API-Key": KRAKEN_API_KEY}
-
-    response = requests.get(url, headers=headers)
-    if response.status_code != 200:
-        raise Exception(f"Kraken Error: {response.text}")
-
-    return response.json()
-
-@app.get("/crypto/kraken/")
-def get_kraken_balances():
-    """Retrieve Kraken balances"""
-    return fetch_kraken_balances()
-
-def fetch_trust_wallet_balances():
-    """Fetch balances from Trust Wallet using Polygonscan API"""
-    url = f"https://api.polygonscan.com/api?module=account&action=balance&address={WALLET_ADDRESS}&apikey={POLYGONSCAN_API_KEY}"
-    response = requests.get(url)
-    if response.status_code != 200:
-        raise Exception(f"Polygonscan Error: {response.text}")
-
-    return response.json()
-
-@app.get("/crypto/trustwallet/")
-def get_trust_wallet_balances():
-    """Retrieve Trust Wallet balances"""
-    return fetch_trust_wallet_balances()
